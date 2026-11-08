@@ -5,64 +5,107 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ClearPaste: paste a confusing document, get it in plain words</title>
   <meta name="description" content="Paste any official, medical, bank or legal text and get a plain-language version, a to-do list, deadlines and a read-aloud option.">
+  <meta name="theme-color" content="#0b5cad">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b5cad'/%3E%3Cpath d='M20 18h18l8 8v20a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4V22a4 4 0 0 1 4-4z' fill='%23fff'/%3E%3Cpath d='M23 34l6 6 12-12' stroke='%230b5cad' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- Icon set -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-paste" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></symbol>
+      <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+      <symbol id="i-money" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></symbol>
+      <symbol id="i-pill" viewBox="0 0 24 24"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7z"/><path d="M8.5 8.5l7 7"/></symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></symbol>
+      <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+      <symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></symbol>
+      <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+      <symbol id="i-print" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+      <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+      <symbol id="i-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/></symbol>
+      <symbol id="i-type" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    </defs>
+  </svg>
+
   <a class="skip" href="#main">Skip to main content</a>
 
-  <header class="topbar">
-    <div class="wrap topbar-inner">
-      <div class="brand">
-        <span class="logo" aria-hidden="true">
-          <svg viewBox="0 0 64 64" width="36" height="36"><rect width="64" height="64" rx="14" fill="currentColor"/><path d="M20 18h18l8 8v20a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4V22a4 4 0 0 1 4-4z" fill="#fff"/><path d="M23 34l6 6 12-12" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-        <div>
-          <h1>ClearPaste</h1>
-          <p class="tagline">Paste a confusing document. Get it in plain words.</p>
-        </div>
-      </div>
+  <header class="hero">
+    <nav class="nav wrap" aria-label="Site">
+      <a class="brand" href="./" aria-label="ClearPaste home">
+        <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#fff"/><path d="M20 18h18l8 8v20a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4V22a4 4 0 0 1 4-4z" fill="#0b5cad"/><path d="M23 34l6 6 12-12" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>ClearPaste</span>
+      </a>
 
       <div class="view-tools" role="group" aria-label="Reading options">
-        <button type="button" class="chip" id="fontDown" aria-label="Smaller text">A−</button>
-        <button type="button" class="chip" id="fontUp" aria-label="Bigger text">A+</button>
-        <button type="button" class="chip" id="toggleDyslexia" aria-pressed="false">Easy-read font</button>
-        <button type="button" class="chip" id="toggleContrast" aria-pressed="false">High contrast</button>
-        <button type="button" class="chip" id="openSettings" aria-haspopup="dialog">Settings</button>
+        <div class="size-group" role="group" aria-label="Text size">
+          <button type="button" class="tool" id="fontDown" aria-label="Smaller text" title="Smaller text"><svg class="i"><use href="#i-minus"/></svg></button>
+          <span class="tool-label" aria-hidden="true">Aa</span>
+          <button type="button" class="tool" id="fontUp" aria-label="Bigger text" title="Bigger text"><svg class="i"><use href="#i-plus"/></svg></button>
+        </div>
+        <button type="button" class="tool wide" id="toggleDyslexia" aria-pressed="false"><svg class="i"><use href="#i-type"/></svg><span>Easy-read</span></button>
+        <button type="button" class="tool wide" id="toggleContrast" aria-pressed="false"><svg class="i"><use href="#i-contrast"/></svg><span>Contrast</span></button>
+        <button type="button" class="tool wide" id="openSettings" aria-haspopup="dialog"><svg class="i"><use href="#i-settings"/></svg><span>Settings</span></button>
       </div>
+    </nav>
+
+    <div class="hero-copy wrap">
+      <p class="eyebrow"><svg class="i"><use href="#i-lock"/></svg> Free · Private · No sign-up</p>
+      <h1>Understand any official document <span class="hl">in seconds.</span></h1>
+      <p class="lede">Paste a government notice, hospital paper, bank letter or agreement. ClearPaste turns it into plain words, a to-do list and the dates that matter.</p>
     </div>
   </header>
 
   <main id="main" class="wrap">
-    <section class="card input-card" aria-labelledby="inputTitle">
-      <div class="card-head">
-        <h2 id="inputTitle">1. Paste your document</h2>
-        <p class="hint">Press <kbd>Ctrl</kbd> + <kbd>V</kbd> anywhere on this page, or use the button. Works with notices, letters, forms, prescriptions and agreements.</p>
+    <section class="composer" aria-labelledby="inputTitle">
+      <div class="composer-head">
+        <h2 id="inputTitle">Paste your document</h2>
+        <p class="keys-hint"><kbd>Ctrl</kbd><span>+</span><kbd>V</kbd> works anywhere on this page</p>
       </div>
 
-      <label for="input" class="sr-only">Document text</label>
-      <textarea id="input" rows="10" spellcheck="false"
-        placeholder="Example: “Applicants are required to furnish the requisite documents on or before…”"></textarea>
-
-      <div class="row between">
-        <div class="row wrap-gap">
-          <button type="button" class="btn" id="pasteBtn">Paste from clipboard</button>
-          <button type="button" class="btn ghost" id="clearBtn">Clear</button>
-          <span class="muted" id="charCount" aria-live="polite">0 words</span>
-        </div>
-        <div class="row wrap-gap samples" role="group" aria-label="Try an example">
-          <span class="muted">Try an example:</span>
-          <button type="button" class="link" data-sample="scholarship">Scholarship notice</button>
-          <button type="button" class="link" data-sample="discharge">Hospital discharge</button>
-          <button type="button" class="link" data-sample="bank">Bank KYC letter</button>
+      <div class="input-wrap" id="inputWrap">
+        <label for="input" class="sr-only">Document text</label>
+        <textarea id="input" rows="9" spellcheck="false"></textarea>
+        <div class="empty-hint" aria-hidden="true">
+          <div class="big-keys"><kbd>Ctrl</kbd><span>+</span><kbd>V</kbd></div>
+          <p>Paste or type the text here</p>
+          <p class="small">You can also drop a .txt file</p>
         </div>
       </div>
 
-      <div class="row between controls">
-        <div class="row wrap-gap">
-          <label class="field">
-            <span>Explain in</span>
-            <select id="language">
+      <div class="composer-tools">
+        <div class="row">
+          <button type="button" class="btn soft" id="pasteBtn"><svg class="i"><use href="#i-paste"/></svg><span>Paste from clipboard</span></button>
+          <button type="button" class="btn ghost" id="clearBtn"><svg class="i"><use href="#i-x"/></svg><span>Clear</span></button>
+          <span class="count" id="charCount" aria-live="polite">0 words</span>
+        </div>
+        <div class="row samples" role="group" aria-label="Try an example">
+          <span class="muted">Try:</span>
+          <button type="button" class="sample" data-sample="scholarship"><svg class="i"><use href="#i-file"/></svg>Scholarship notice</button>
+          <button type="button" class="sample" data-sample="discharge"><svg class="i"><use href="#i-pill"/></svg>Hospital discharge</button>
+          <button type="button" class="sample" data-sample="bank"><svg class="i"><use href="#i-money"/></svg>Bank KYC letter</button>
+        </div>
+      </div>
+
+      <div class="composer-foot">
+        <div class="row">
+          <label class="select-field">
+            <svg class="i"><use href="#i-globe"/></svg>
+            <span class="sr-only">Explain in</span>
+            <select id="language" aria-label="Explain in">
               <option>English</option>
               <option>Hindi</option>
               <option>Bengali</option>
@@ -82,100 +125,139 @@
               <option>Swahili</option>
             </select>
           </label>
-          <fieldset class="mode" aria-describedby="modeHint">
+          <fieldset class="segmented" aria-describedby="modeHint">
             <legend class="sr-only">How to simplify</legend>
-            <label><input type="radio" name="mode" value="local" checked> Offline</label>
-            <label><input type="radio" name="mode" value="ai"> AI (Gemini)</label>
+            <label><input type="radio" name="mode" value="local" checked><span><svg class="i"><use href="#i-lock"/></svg>Offline</span></label>
+            <label><input type="radio" name="mode" value="ai"><span><svg class="i"><use href="#i-sparkles"/></svg>AI</span></label>
           </fieldset>
         </div>
-        <button type="button" class="btn primary big" id="runBtn">Make it clear</button>
+        <button type="button" class="btn primary big" id="runBtn"><svg class="i"><use href="#i-sparkles"/></svg><span>Make it clear</span></button>
       </div>
-      <p class="hint" id="modeHint">Offline mode runs in your browser and nothing leaves your device. It explains in English only. AI mode gives better rewrites in any listed language and needs a free Gemini API key in Settings.</p>
+      <p class="hint" id="modeHint"><strong>Offline</strong> runs in your browser and nothing leaves your device (English only). <strong>AI</strong> gives better rewrites in 17 languages and needs a free Gemini key in Settings.</p>
       <p id="status" class="status" role="status" aria-live="polite"></p>
     </section>
 
+    <section class="how" id="how" aria-label="How it works">
+      <div class="how-card">
+        <span class="how-icon c-blue"><svg class="i"><use href="#i-paste"/></svg></span>
+        <h3>Paste</h3>
+        <p>Copy text from a PDF, website, SMS or email and press Ctrl + V.</p>
+      </div>
+      <div class="how-card">
+        <span class="how-icon c-purple"><svg class="i"><use href="#i-sparkles"/></svg></span>
+        <h3>Get plain words</h3>
+        <p>Hard phrases become everyday words. Long sentences are split up.</p>
+      </div>
+      <div class="how-card">
+        <span class="how-icon c-green"><svg class="i"><use href="#i-check"/></svg></span>
+        <h3>Know what to do</h3>
+        <p>See a checklist, the deadlines, the amounts and who to call.</p>
+      </div>
+      <div class="how-card">
+        <span class="how-icon c-orange"><svg class="i"><use href="#i-volume"/></svg></span>
+        <h3>Listen or share</h3>
+        <p>Hear it read aloud, make the text bigger, or send it to family.</p>
+      </div>
+    </section>
+
     <section id="results" class="results" hidden aria-labelledby="resultsTitle">
-      <div class="results-head">
-        <div>
-          <h2 id="resultsTitle" tabindex="-1">2. Here is what it says</h2>
-          <p class="muted" id="resultMeta"></p>
+      <div class="results-bar">
+        <div class="results-title">
+          <h2 id="resultsTitle" tabindex="-1">Here's what it says</h2>
+          <div class="badges">
+            <span class="badge" id="docBadge"></span>
+            <span class="badge subtle" id="sourceBadge"></span>
+          </div>
         </div>
-        <div class="row wrap-gap">
-          <button type="button" class="btn" id="speakBtn" aria-pressed="false">▶ Read aloud</button>
-          <label class="field compact">
-            <span>Speed</span>
-            <select id="rate">
+        <div class="toolbar">
+          <div class="speak-group">
+            <button type="button" class="btn primary" id="speakBtn" aria-pressed="false"><svg class="i"><use href="#i-volume"/></svg><span class="label">Read aloud</span></button>
+            <label class="sr-only" for="rate">Reading speed</label>
+            <select id="rate" class="rate" title="Reading speed">
               <option value="0.75">Slow</option>
               <option value="0.9" selected>Normal</option>
               <option value="1.15">Fast</option>
             </select>
-          </label>
-          <button type="button" class="btn ghost" id="copyBtn">Copy</button>
-          <button type="button" class="btn ghost" id="downloadBtn">Download</button>
-          <button type="button" class="btn ghost" id="printBtn">Print</button>
+          </div>
+          <button type="button" class="icon-btn" id="copyBtn" title="Copy" aria-label="Copy result"><svg class="i"><use href="#i-copy"/></svg></button>
+          <button type="button" class="icon-btn" id="downloadBtn" title="Download" aria-label="Download result"><svg class="i"><use href="#i-download"/></svg></button>
+          <button type="button" class="icon-btn" id="printBtn" title="Print" aria-label="Print result"><svg class="i"><use href="#i-print"/></svg></button>
         </div>
       </div>
 
       <div id="readability" class="readability"></div>
 
-      <div class="grid">
-        <article class="card span-2 summary-card" id="summaryCard">
-          <h3><span class="icon" aria-hidden="true">💡</span> In short</h3>
-          <div id="summary"></div>
-        </article>
+      <div class="layout" id="layout">
+        <div class="col-main">
+          <article class="card summary-card" id="summaryCard">
+            <h3 class="card-title"><span class="ci c-blue"><svg class="i"><use href="#i-bulb"/></svg></span>In short</h3>
+            <div id="summary" class="summary"></div>
+          </article>
 
-        <article class="card warn-card" id="warningsCard">
-          <h3><span class="icon" aria-hidden="true">⚠️</span> Be careful</h3>
-          <ul id="warnings" class="list"></ul>
-        </article>
+          <article class="card" id="actionsCard">
+            <div class="card-title-row">
+              <h3 class="card-title"><span class="ci c-green"><svg class="i"><use href="#i-check"/></svg></span>What you need to do</h3>
+              <span class="progress-label" id="actionsCount"></span>
+            </div>
+            <div class="progress" aria-hidden="true"><span id="actionsBar"></span></div>
+            <ul id="actions" class="checklist"></ul>
+          </article>
 
-        <article class="card span-2" id="actionsCard">
-          <h3><span class="icon" aria-hidden="true">✅</span> What you need to do</h3>
-          <p class="muted small">Tick each step when it is done.</p>
-          <ul id="actions" class="checklist"></ul>
-        </article>
+          <article class="card" id="plainCard">
+            <div class="card-title-row">
+              <h3 class="card-title"><span class="ci c-purple"><svg class="i"><use href="#i-file"/></svg></span>The whole document in plain words</h3>
+              <div class="tabs" role="tablist" aria-label="Document view" id="viewTabs">
+                <button type="button" role="tab" aria-selected="true" data-view="plain">Plain</button>
+                <button type="button" role="tab" aria-selected="false" data-view="side">Side by side</button>
+                <button type="button" role="tab" aria-selected="false" data-view="original">Original</button>
+              </div>
+            </div>
+            <p class="muted small" id="plainHint"><mark class="swap demo">Highlighted</mark> words were changed. Hover or tap one to see the original.</p>
+            <div class="compare" id="compare">
+              <div id="plain" class="plain"></div>
+              <div id="original" class="plain original" hidden></div>
+            </div>
+          </article>
 
-        <article class="card" id="datesCard">
-          <h3><span class="icon" aria-hidden="true">📅</span> Dates and deadlines</h3>
-          <ul id="dates" class="kv"></ul>
-        </article>
+          <article class="card" id="glossaryCard">
+            <details>
+              <summary class="card-title"><span class="ci c-teal"><svg class="i"><use href="#i-book"/></svg></span>Hard words explained <span class="pill" id="glossaryCount"></span></summary>
+              <dl id="glossary" class="glossary"></dl>
+            </details>
+          </article>
+        </div>
 
-        <article class="card" id="moneyCard">
-          <h3><span class="icon" aria-hidden="true">💰</span> Money</h3>
-          <ul id="money" class="kv"></ul>
-        </article>
+        <aside class="col-side" aria-label="Key facts">
+          <article class="card warn-card" id="warningsCard">
+            <h3 class="card-title"><span class="ci c-orange"><svg class="i"><use href="#i-alert"/></svg></span>Be careful</h3>
+            <ul id="warnings" class="list"></ul>
+          </article>
 
-        <article class="card" id="documentsCard">
-          <h3><span class="icon" aria-hidden="true">📄</span> Keep these ready</h3>
-          <ul id="documents" class="checklist"></ul>
-        </article>
+          <article class="card" id="datesCard">
+            <h3 class="card-title"><span class="ci c-blue"><svg class="i"><use href="#i-calendar"/></svg></span>Dates and deadlines</h3>
+            <ul id="dates" class="kv"></ul>
+          </article>
 
-        <article class="card" id="medicinesCard">
-          <h3><span class="icon" aria-hidden="true">💊</span> Medicines</h3>
-          <ul id="medicines" class="list"></ul>
-        </article>
+          <article class="card" id="moneyCard">
+            <h3 class="card-title"><span class="ci c-green"><svg class="i"><use href="#i-money"/></svg></span>Money</h3>
+            <ul id="money" class="kv"></ul>
+          </article>
 
-        <article class="card" id="contactsCard">
-          <h3><span class="icon" aria-hidden="true">📞</span> Who to contact</h3>
-          <ul id="contacts" class="list"></ul>
-        </article>
+          <article class="card" id="documentsCard">
+            <h3 class="card-title"><span class="ci c-purple"><svg class="i"><use href="#i-file"/></svg></span>Keep these ready</h3>
+            <ul id="documents" class="checklist compact"></ul>
+          </article>
 
-        <article class="card span-3" id="plainCard">
-          <div class="row between">
-            <h3><span class="icon" aria-hidden="true">📝</span> The whole document in plain words</h3>
-            <button type="button" class="link" id="toggleOriginal" aria-expanded="false">Show original side by side</button>
-          </div>
-          <p class="muted small" id="plainHint">Underlined words were changed. Hover or tap them to see the original wording.</p>
-          <div class="compare">
-            <div id="plain" class="plain"></div>
-            <div id="original" class="plain original" hidden></div>
-          </div>
-        </article>
+          <article class="card" id="medicinesCard">
+            <h3 class="card-title"><span class="ci c-pink"><svg class="i"><use href="#i-pill"/></svg></span>Medicines</h3>
+            <ul id="medicines" class="list"></ul>
+          </article>
 
-        <article class="card span-3" id="glossaryCard">
-          <h3><span class="icon" aria-hidden="true">📖</span> Hard words explained</h3>
-          <dl id="glossary" class="glossary"></dl>
-        </article>
+          <article class="card" id="contactsCard">
+            <h3 class="card-title"><span class="ci c-teal"><svg class="i"><use href="#i-phone"/></svg></span>Who to contact</h3>
+            <ul id="contacts" class="list contacts"></ul>
+          </article>
+        </aside>
       </div>
 
       <p class="disclaimer">ClearPaste helps you understand a document. It is not legal, medical or financial advice. Always check important details with the office, doctor or bank that sent it.</p>
@@ -184,25 +266,30 @@
 
   <dialog id="settings" aria-labelledby="settingsTitle">
     <form method="dialog" id="settingsForm">
-      <h2 id="settingsTitle">Settings</h2>
-      <label class="field block">
+      <div class="dialog-head">
+        <h2 id="settingsTitle">Settings</h2>
+        <button type="submit" class="icon-btn" value="cancel" formnovalidate aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+      </div>
+      <label class="field">
         <span>Gemini API key (for AI mode)</span>
         <input type="password" id="apiKey" autocomplete="off" spellcheck="false" placeholder="Paste your key here">
       </label>
-      <p class="hint">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. The key is saved only in this browser and is sent only to Google.</p>
-      <label class="field block">
+      <p class="hint">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. It is saved only in this browser and sent only to Google.</p>
+      <label class="field">
         <span>Model</span>
         <input type="text" id="model" spellcheck="false">
       </label>
-      <div class="row end wrap-gap">
+      <div class="dialog-foot">
         <button type="button" class="btn ghost" id="forgetKey">Remove key</button>
-        <button type="submit" class="btn primary" value="save">Save</button>
+        <button type="submit" class="btn primary" value="save" id="saveSettings">Save</button>
       </div>
     </form>
   </dialog>
 
-  <footer class="wrap footer">
-    <p>Built for the Ctrl+V Hackathon. Runs in your browser, no account needed.</p>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <footer class="footer wrap">
+    <p>Built for the Ctrl+V Hackathon · Runs in your browser · No account needed</p>
   </footer>
 
   <script src="js/engine.js"></script>

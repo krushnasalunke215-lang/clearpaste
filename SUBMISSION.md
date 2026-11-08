@@ -77,7 +77,7 @@ HTML, CSS, JavaScript, Web Speech API, Clipboard API, Google Gemini API, Flesch-
 
 ## Screenshots
 
-Upload the files in the `screenshots` folder: `home.png`, `scholarship.png`, `discharge.png`, `bank.png`.
+Upload the files in the `screenshots` folder: `home.png`, `scholarship.png`, `discharge.png`, `bank.png`, `contrast.png`.
 
 ---
 

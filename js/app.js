@@ -8,16 +8,17 @@
 
   const $ = (id) => document.getElementById(id);
   const els = {
-    input: $('input'), pasteBtn: $('pasteBtn'), clearBtn: $('clearBtn'), charCount: $('charCount'),
-    language: $('language'), runBtn: $('runBtn'), status: $('status'), results: $('results'),
-    resultsTitle: $('resultsTitle'), resultMeta: $('resultMeta'), readability: $('readability'),
-    summary: $('summary'), warnings: $('warnings'), actions: $('actions'), dates: $('dates'),
+    input: $('input'), inputWrap: $('inputWrap'), pasteBtn: $('pasteBtn'), clearBtn: $('clearBtn'), charCount: $('charCount'),
+    language: $('language'), runBtn: $('runBtn'), status: $('status'), how: $('how'), results: $('results'),
+    resultsTitle: $('resultsTitle'), docBadge: $('docBadge'), sourceBadge: $('sourceBadge'), readability: $('readability'),
+    layout: $('layout'), summary: $('summary'), warnings: $('warnings'), actions: $('actions'),
+    actionsCount: $('actionsCount'), actionsBar: $('actionsBar'), dates: $('dates'),
     money: $('money'), documents: $('documents'), medicines: $('medicines'), contacts: $('contacts'),
-    plain: $('plain'), original: $('original'), plainHint: $('plainHint'), glossary: $('glossary'),
-    toggleOriginal: $('toggleOriginal'), speakBtn: $('speakBtn'), rate: $('rate'),
-    copyBtn: $('copyBtn'), downloadBtn: $('downloadBtn'), printBtn: $('printBtn'),
+    plain: $('plain'), original: $('original'), plainHint: $('plainHint'), compare: $('compare'), viewTabs: $('viewTabs'),
+    glossary: $('glossary'), glossaryCount: $('glossaryCount'),
+    speakBtn: $('speakBtn'), rate: $('rate'), copyBtn: $('copyBtn'), downloadBtn: $('downloadBtn'), printBtn: $('printBtn'),
     settings: $('settings'), settingsForm: $('settingsForm'), apiKey: $('apiKey'), model: $('model'),
-    forgetKey: $('forgetKey'), openSettings: $('openSettings'),
+    forgetKey: $('forgetKey'), openSettings: $('openSettings'), toast: $('toast'),
     fontUp: $('fontUp'), fontDown: $('fontDown'), toggleDyslexia: $('toggleDyslexia'), toggleContrast: $('toggleContrast'),
   };
 
@@ -27,6 +28,8 @@
     Gujarati: 'gu-IN', Kannada: 'kn-IN', Malayalam: 'ml-IN', Punjabi: 'pa-IN', Odia: 'or-IN', Urdu: 'ur-IN',
     Spanish: 'es-ES', French: 'fr-FR', Arabic: 'ar-SA', Portuguese: 'pt-BR', Swahili: 'sw-KE',
   };
+
+  const SIDE_CARDS = ['warningsCard', 'datesCard', 'moneyCard', 'documentsCard', 'medicinesCard', 'contactsCard'];
 
   // ---------------------------------------------------------------------------
   // Preferences (saved in localStorage)
@@ -68,7 +71,7 @@
     prefs.scale = Math.round(Math.min(1.6, Math.max(0.85, prefs.scale + delta)) * 100) / 100;
     store.set('scale', prefs.scale);
     applyView();
-    setStatus('Text size ' + Math.round(prefs.scale * 100) + '%');
+    toast('Text size ' + Math.round(prefs.scale * 100) + '%');
   }
 
   // ---------------------------------------------------------------------------
@@ -92,6 +95,24 @@
     els.status.className = 'status' + (kind ? ' ' + kind : '');
   }
 
+  let toastTimer = null;
+  function toast(msg) {
+    els.toast.textContent = msg;
+    els.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => els.toast.classList.remove('show'), 2600);
+  }
+
+  function setLabel(btn, text) {
+    const label = btn.querySelector('span') || btn;
+    label.textContent = text;
+  }
+
+  function setIcon(btn, id) {
+    const use = btn.querySelector('use');
+    if (use) use.setAttribute('href', '#' + id);
+  }
+
   function countWords(text) {
     const m = text.trim().match(/\S+/g);
     return m ? m.length : 0;
@@ -100,6 +121,7 @@
   function updateCount() {
     const n = countWords(els.input.value);
     els.charCount.textContent = n === 1 ? '1 word' : n + ' words';
+    els.inputWrap.classList.toggle('has-text', els.input.value.length > 0);
   }
 
   function getMode() {
@@ -142,21 +164,19 @@
   function renderReadability(r) {
     els.readability.replaceChildren();
     if (!r || !r.before || !r.after || !r.before.words) return;
-    const meter = (cls, title, data) => {
-      const pct = Math.min(100, Math.max(6, (data.grade / 16) * 100));
-      const bar = el('span');
-      bar.style.width = pct + '%';
-      return el('div', { class: 'meter ' + cls }, [
-        el('div', null, [el('strong', { text: title + ': ' }), document.createTextNode(`${data.label} (reading grade ${data.grade})`)]),
-        el('div', { class: 'meter-bar', role: 'img', 'aria-label': `${title} reading level grade ${data.grade}` }, [bar]),
-      ]);
-    };
+    const item = (cls, title, data) => el('div', { class: 'rl-item ' + cls }, [
+      el('span', { class: 'rl-grade', text: String(data.grade), title: 'US school grade level' }),
+      el('div', { class: 'rl-text' }, [el('small', { text: title }), el('strong', { text: data.label })]),
+    ]);
     const drop = Math.max(0, Math.round((r.before.grade - r.after.grade) * 10) / 10);
     els.readability.append(
-      meter('before', 'Original', r.before),
-      el('span', { class: 'arrow', 'aria-hidden': 'true', text: '→' }),
-      meter('after', 'Plain version', r.after),
-      el('div', { class: 'muted' }, [document.createTextNode(drop > 0 ? `${drop} school grades easier to read` : 'Reading level checked')])
+      item('before', 'Original', r.before),
+      el('span', { class: 'rl-arrow', 'aria-hidden': 'true', text: '→' }),
+      item('after', 'Plain version', r.after),
+      el('div', { class: 'rl-gain' }, [
+        el('strong', { text: drop > 0 ? `${drop} grades easier to read` : 'Reading level checked' }),
+        el('span', { text: 'Reading level by school grade (Flesch-Kincaid)' }),
+      ])
     );
   }
 
@@ -189,15 +209,31 @@
     for (const para of Engine.toParagraphs(text)) els.original.append(el('p', { text: para }));
   }
 
+  function setView(view) {
+    els.viewTabs.querySelectorAll('[role="tab"]').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.view === view)));
+    els.plain.hidden = view === 'original';
+    els.original.hidden = view === 'plain';
+    els.compare.classList.toggle('side', view === 'side');
+    els.plainHint.classList.toggle('sr-only', view === 'original');
+  }
+
+  function updateProgress() {
+    const boxes = els.actions.querySelectorAll('input[type="checkbox"]');
+    const done = Array.from(boxes).filter((b) => b.checked).length;
+    const total = boxes.length;
+    els.actionsCount.textContent = total ? (done === total ? 'All done!' : `${done} of ${total} done`) : '';
+    els.actionsBar.style.width = total ? (done / total) * 100 + '%' : '0';
+  }
+
   let lastResult = null;
-  let lastInput = '';
 
   function render(result, inputText) {
     lastResult = result;
-    lastInput = inputText;
 
-    const source = result.source === 'ai' ? `AI (${result.model}), in ${result.language}` : 'offline mode, in English';
-    els.resultMeta.textContent = `${result.docType} · explained by ${source}`;
+    els.docBadge.textContent = result.docType;
+    els.sourceBadge.textContent = result.source === 'ai'
+      ? `AI · ${result.language}`
+      : 'Offline · English';
 
     renderReadability(result.readability);
 
@@ -216,16 +252,22 @@
     fillList(els.documents, result.documents, { checklist: true });
     fillList(els.medicines, result.medicines);
     fillList(els.contacts, result.contacts, { render: contactNode });
+    updateProgress();
+
+    els.layout.classList.toggle('no-side', SIDE_CARDS.every((id) => $(id).hidden));
 
     renderPlain(result);
     renderOriginal(inputText);
+    setView('plain');
 
     els.glossary.replaceChildren();
     $('glossaryCard').hidden = !result.glossary.length;
+    els.glossaryCount.textContent = String(result.glossary.length);
     for (const g of result.glossary) {
       els.glossary.append(el('div', null, [el('dt', { text: g.term }), el('dd', { text: g.meaning })]));
     }
 
+    els.how.hidden = true;
     els.results.hidden = false;
     els.resultsTitle.focus({ preventScroll: true });
     els.results.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
@@ -235,6 +277,13 @@
   // Running
   // ---------------------------------------------------------------------------
   let busy = false;
+
+  function setBusy(on, label) {
+    busy = on;
+    els.runBtn.disabled = on;
+    els.runBtn.classList.toggle('loading', on);
+    setLabel(els.runBtn, on ? (label || 'Working…') : 'Make it clear');
+  }
 
   async function run() {
     const text = els.input.value.trim();
@@ -255,8 +304,7 @@
       return;
     }
 
-    busy = true;
-    els.runBtn.disabled = true;
+    setBusy(true, mode === 'ai' ? 'Asking AI…' : 'Working…');
 
     try {
       if (mode === 'ai') {
@@ -272,19 +320,19 @@
           const local = Engine.analyze(text);
           render(local, text);
           setStatus(err.message + ' Showing the offline version instead.', 'error');
+          toast('AI failed. Showing the offline version.');
         }
       } else {
         const result = Engine.analyze(text);
         render(result, text);
         setStatus(language === 'English'
-          ? 'Done.'
-          : 'Done. Offline mode explains in English only. Switch to AI mode for ' + language + '.');
+          ? ''
+          : 'Offline mode explains in English only. Switch to AI mode for ' + language + '.');
       }
     } catch (err) {
       setStatus(err.message || 'Something went wrong.', 'error');
     } finally {
-      busy = false;
-      els.runBtn.disabled = false;
+      setBusy(false);
     }
   }
 
@@ -332,13 +380,14 @@
     if (synth) synth.cancel();
     speaking = false;
     clearSpeakingMarks();
-    els.speakBtn.textContent = '▶ Read aloud';
+    setLabel(els.speakBtn, 'Read aloud');
+    setIcon(els.speakBtn, 'i-volume');
     els.speakBtn.setAttribute('aria-pressed', 'false');
   }
 
   function speak() {
     if (!synth) {
-      setStatus('Your browser does not support reading aloud.', 'error');
+      toast('Your browser does not support reading aloud.');
       return;
     }
     if (speaking) {
@@ -350,14 +399,15 @@
     const code = LANG_CODES[lastResult.language] || 'en-IN';
     const voice = pickVoice(code);
     if (!voice && lastResult.language !== 'English') {
-      setStatus(`No ${lastResult.language} voice is installed on this device. It may be read with the default voice.`);
+      toast(`No ${lastResult.language} voice on this device. Using the default voice.`);
     }
 
     const chunks = speechChunks(lastResult);
     if (!chunks.length) return;
     synth.cancel();
     speaking = true;
-    els.speakBtn.textContent = '■ Stop reading';
+    setLabel(els.speakBtn, 'Stop');
+    setIcon(els.speakBtn, 'i-stop');
     els.speakBtn.setAttribute('aria-pressed', 'true');
 
     chunks.forEach((chunk, i) => {
@@ -368,7 +418,10 @@
       u.onstart = () => {
         clearSpeakingMarks();
         const card = $(chunk.card);
-        if (card) card.classList.add('speaking');
+        if (card) {
+          card.classList.add('speaking');
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
       };
       if (i === chunks.length - 1) u.onend = stopSpeaking;
       u.onerror = (e) => { if (e.error !== 'interrupted' && e.error !== 'canceled') stopSpeaking(); };
@@ -409,7 +462,7 @@
     const text = reportText(lastResult);
     try {
       await navigator.clipboard.writeText(text);
-      setStatus('Copied. You can paste it into WhatsApp, email or notes.');
+      toast('Copied. Paste it into WhatsApp, email or notes.');
     } catch (_) {
       const ta = el('textarea');
       ta.value = text;
@@ -417,7 +470,7 @@
       ta.select();
       const ok = document.execCommand('copy');
       ta.remove();
-      setStatus(ok ? 'Copied.' : 'Could not copy. Use Download instead.', ok ? '' : 'error');
+      toast(ok ? 'Copied.' : 'Could not copy. Use Download instead.');
     }
   }
 
@@ -430,6 +483,7 @@
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('Downloaded as a text file.');
   }
 
   // ---------------------------------------------------------------------------
@@ -443,7 +497,8 @@
     els.apiKey.focus();
   }
 
-  els.settingsForm.addEventListener('submit', () => {
+  els.settingsForm.addEventListener('submit', (e) => {
+    if (e.submitter && e.submitter.value === 'cancel') return;
     prefs.apiKey = els.apiKey.value.trim();
     prefs.model = els.model.value.trim() || AI.DEFAULT_MODEL;
     store.set('apiKey', prefs.apiKey);
@@ -453,7 +508,7 @@
       prefs.mode = 'ai';
       store.set('mode', 'ai');
     }
-    setStatus(prefs.apiKey ? 'Settings saved. AI mode is on.' : 'Settings saved.');
+    toast(prefs.apiKey ? 'Saved. AI mode is on.' : 'Settings saved.');
   });
 
   els.forgetKey.addEventListener('click', () => {
@@ -463,7 +518,7 @@
     document.querySelector('input[name="mode"][value="local"]').checked = true;
     prefs.mode = 'local';
     store.set('mode', 'local');
-    setStatus('API key removed from this browser.');
+    toast('API key removed from this browser.');
   });
 
   // ---------------------------------------------------------------------------
@@ -479,6 +534,7 @@
     loadText('', false);
     stopSpeaking();
     els.results.hidden = true;
+    els.how.hidden = false;
     setStatus('');
     els.input.focus();
   });
@@ -546,6 +602,8 @@
     store.set('language', prefs.language);
     if (prefs.language !== 'English' && getMode() === 'local') {
       setStatus('Offline mode explains in English only. Switch to AI mode for ' + prefs.language + '.');
+    } else {
+      setStatus('');
     }
   });
 
@@ -555,13 +613,12 @@
     if (prefs.mode === 'ai' && !prefs.apiKey) openSettings();
   }));
 
-  els.toggleOriginal.addEventListener('click', () => {
-    const show = els.original.hidden;
-    els.original.hidden = !show;
-    els.original.parentElement.classList.toggle('side', show);
-    els.toggleOriginal.setAttribute('aria-expanded', String(show));
-    els.toggleOriginal.textContent = show ? 'Hide original' : 'Show original side by side';
+  els.viewTabs.addEventListener('click', (e) => {
+    const tab = e.target.closest('[role="tab"]');
+    if (tab) setView(tab.dataset.view);
   });
+
+  els.actions.addEventListener('change', updateProgress);
 
   els.speakBtn.addEventListener('click', speak);
   els.copyBtn.addEventListener('click', copyReport);
@@ -575,14 +632,23 @@
     prefs.dyslexia = !prefs.dyslexia;
     store.set('dyslexia', prefs.dyslexia);
     applyView();
+    toast(prefs.dyslexia ? 'Easy-read font on' : 'Easy-read font off');
   });
   els.toggleContrast.addEventListener('click', () => {
     prefs.contrast = !prefs.contrast;
     store.set('contrast', prefs.contrast);
     applyView();
+    toast(prefs.contrast ? 'High contrast on' : 'High contrast off');
   });
 
-  if (synth && typeof synth.addEventListener === 'function') synth.addEventListener('voiceschanged', () => {});
+  // Show a divider under the sticky results bar once it is stuck.
+  const bar = document.querySelector('.results-bar');
+  if (bar && 'IntersectionObserver' in window) {
+    const sentinel = el('div', { 'aria-hidden': 'true' });
+    bar.before(sentinel);
+    new IntersectionObserver(([entry]) => bar.classList.toggle('stuck', !entry.isIntersecting)).observe(sentinel);
+  }
+
   window.addEventListener('beforeunload', () => synth && synth.cancel());
 
   // ---------------------------------------------------------------------------
