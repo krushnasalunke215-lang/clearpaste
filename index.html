@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ClearPaste: paste a confusing document, get it in plain words</title>
+  <meta name="description" content="Paste any official, medical, bank or legal text and get a plain-language version, a to-do list, deadlines and a read-aloud option.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b5cad'/%3E%3Cpath d='M20 18h18l8 8v20a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4V22a4 4 0 0 1 4-4z' fill='%23fff'/%3E%3Cpath d='M23 34l6 6 12-12' stroke='%230b5cad' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to main content</a>
+
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="36" height="36"><rect width="64" height="64" rx="14" fill="currentColor"/><path d="M20 18h18l8 8v20a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4V22a4 4 0 0 1 4-4z" fill="#fff"/><path d="M23 34l6 6 12-12" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <div>
+          <h1>ClearPaste</h1>
+          <p class="tagline">Paste a confusing document. Get it in plain words.</p>
+        </div>
+      </div>
+
+      <div class="view-tools" role="group" aria-label="Reading options">
+        <button type="button" class="chip" id="fontDown" aria-label="Smaller text">A−</button>
+        <button type="button" class="chip" id="fontUp" aria-label="Bigger text">A+</button>
+        <button type="button" class="chip" id="toggleDyslexia" aria-pressed="false">Easy-read font</button>
+        <button type="button" class="chip" id="toggleContrast" aria-pressed="false">High contrast</button>
+        <button type="button" class="chip" id="openSettings" aria-haspopup="dialog">Settings</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section class="card input-card" aria-labelledby="inputTitle">
+      <div class="card-head">
+        <h2 id="inputTitle">1. Paste your document</h2>
+        <p class="hint">Press <kbd>Ctrl</kbd> + <kbd>V</kbd> anywhere on this page, or use the button. Works with notices, letters, forms, prescriptions and agreements.</p>
+      </div>
+
+      <label for="input" class="sr-only">Document text</label>
+      <textarea id="input" rows="10" spellcheck="false"
+        placeholder="Example: “Applicants are required to furnish the requisite documents on or before…”"></textarea>
+
+      <div class="row between">
+        <div class="row wrap-gap">
+          <button type="button" class="btn" id="pasteBtn">Paste from clipboard</button>
+          <button type="button" class="btn ghost" id="clearBtn">Clear</button>
+          <span class="muted" id="charCount" aria-live="polite">0 words</span>
+        </div>
+        <div class="row wrap-gap samples" role="group" aria-label="Try an example">
+          <span class="muted">Try an example:</span>
+          <button type="button" class="link" data-sample="scholarship">Scholarship notice</button>
+          <button type="button" class="link" data-sample="discharge">Hospital discharge</button>
+          <button type="button" class="link" data-sample="bank">Bank KYC letter</button>
+        </div>
+      </div>
+
+      <div class="row between controls">
+        <div class="row wrap-gap">
+          <label class="field">
+            <span>Explain in</span>
+            <select id="language">
+              <option>English</option>
+              <option>Hindi</option>
+              <option>Bengali</option>
+              <option>Marathi</option>
+              <option>Telugu</option>
+              <option>Tamil</option>
+              <option>Gujarati</option>
+              <option>Kannada</option>
+              <option>Malayalam</option>
+              <option>Punjabi</option>
+              <option>Odia</option>
+              <option>Urdu</option>
+              <option>Spanish</option>
+              <option>French</option>
+              <option>Arabic</option>
+              <option>Portuguese</option>
+              <option>Swahili</option>
+            </select>
+          </label>
+          <fieldset class="mode" aria-describedby="modeHint">
+            <legend class="sr-only">How to simplify</legend>
+            <label><input type="radio" name="mode" value="local" checked> Offline</label>
+            <label><input type="radio" name="mode" value="ai"> AI (Gemini)</label>
+          </fieldset>
+        </div>
+        <button type="button" class="btn primary big" id="runBtn">Make it clear</button>
+      </div>
+      <p class="hint" id="modeHint">Offline mode runs in your browser and nothing leaves your device. It explains in English only. AI mode gives better rewrites in any listed language and needs a free Gemini API key in Settings.</p>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="results" class="results" hidden aria-labelledby="resultsTitle">
+      <div class="results-head">
+        <div>
+          <h2 id="resultsTitle" tabindex="-1">2. Here is what it says</h2>
+          <p class="muted" id="resultMeta"></p>
+        </div>
+        <div class="row wrap-gap">
+          <button type="button" class="btn" id="speakBtn" aria-pressed="false">▶ Read aloud</button>
+          <label class="field compact">
+            <span>Speed</span>
+            <select id="rate">
+              <option value="0.75">Slow</option>
+              <option value="0.9" selected>Normal</option>
+              <option value="1.15">Fast</option>
+            </select>
+          </label>
+          <button type="button" class="btn ghost" id="copyBtn">Copy</button>
+          <button type="button" class="btn ghost" id="downloadBtn">Download</button>
+          <button type="button" class="btn ghost" id="printBtn">Print</button>
+        </div>
+      </div>
+
+      <div id="readability" class="readability"></div>
+
+      <div class="grid">
+        <article class="card span-2 summary-card" id="summaryCard">
+          <h3><span class="icon" aria-hidden="true">💡</span> In short</h3>
+          <div id="summary"></div>
+        </article>
+
+        <article class="card warn-card" id="warningsCard">
+          <h3><span class="icon" aria-hidden="true">⚠️</span> Be careful</h3>
+          <ul id="warnings" class="list"></ul>
+        </article>
+
+        <article class="card span-2" id="actionsCard">
+          <h3><span class="icon" aria-hidden="true">✅</span> What you need to do</h3>
+          <p class="muted small">Tick each step when it is done.</p>
+          <ul id="actions" class="checklist"></ul>
+        </article>
+
+        <article class="card" id="datesCard">
+          <h3><span class="icon" aria-hidden="true">📅</span> Dates and deadlines</h3>
+          <ul id="dates" class="kv"></ul>
+        </article>
+
+        <article class="card" id="moneyCard">
+          <h3><span class="icon" aria-hidden="true">💰</span> Money</h3>
+          <ul id="money" class="kv"></ul>
+        </article>
+
+        <article class="card" id="documentsCard">
+          <h3><span class="icon" aria-hidden="true">📄</span> Keep these ready</h3>
+          <ul id="documents" class="checklist"></ul>
+        </article>
+
+        <article class="card" id="medicinesCard">
+          <h3><span class="icon" aria-hidden="true">💊</span> Medicines</h3>
+          <ul id="medicines" class="list"></ul>
+        </article>
+
+        <article class="card" id="contactsCard">
+          <h3><span class="icon" aria-hidden="true">📞</span> Who to contact</h3>
+          <ul id="contacts" class="list"></ul>
+        </article>
+
+        <article class="card span-3" id="plainCard">
+          <div class="row between">
+            <h3><span class="icon" aria-hidden="true">📝</span> The whole document in plain words</h3>
+            <button type="button" class="link" id="toggleOriginal" aria-expanded="false">Show original side by side</button>
+          </div>
+          <p class="muted small" id="plainHint">Underlined words were changed. Hover or tap them to see the original wording.</p>
+          <div class="compare">
+            <div id="plain" class="plain"></div>
+            <div id="original" class="plain original" hidden></div>
+          </div>
+        </article>
+
+        <article class="card span-3" id="glossaryCard">
+          <h3><span class="icon" aria-hidden="true">📖</span> Hard words explained</h3>
+          <dl id="glossary" class="glossary"></dl>
+        </article>
+      </div>
+
+      <p class="disclaimer">ClearPaste helps you understand a document. It is not legal, medical or financial advice. Always check important details with the office, doctor or bank that sent it.</p>
+    </section>
+  </main>
+
+  <dialog id="settings" aria-labelledby="settingsTitle">
+    <form method="dialog" id="settingsForm">
+      <h2 id="settingsTitle">Settings</h2>
+      <label class="field block">
+        <span>Gemini API key (for AI mode)</span>
+        <input type="password" id="apiKey" autocomplete="off" spellcheck="false" placeholder="Paste your key here">
+      </label>
+      <p class="hint">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. The key is saved only in this browser and is sent only to Google.</p>
+      <label class="field block">
+        <span>Model</span>
+        <input type="text" id="model" spellcheck="false">
+      </label>
+      <div class="row end wrap-gap">
+        <button type="button" class="btn ghost" id="forgetKey">Remove key</button>
+        <button type="submit" class="btn primary" value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer class="wrap footer">
+    <p>Built for the Ctrl+V Hackathon. Runs in your browser, no account needed.</p>
+  </footer>
+
+  <script src="js/engine.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/samples.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
