@@ -17,7 +17,7 @@
     plain: $('plain'), original: $('original'), plainHint: $('plainHint'), compare: $('compare'), viewTabs: $('viewTabs'),
     glossary: $('glossary'), glossaryCount: $('glossaryCount'),
     speakBtn: $('speakBtn'), rate: $('rate'), copyBtn: $('copyBtn'), downloadBtn: $('downloadBtn'), printBtn: $('printBtn'),
-    settings: $('settings'), settingsForm: $('settingsForm'), apiKey: $('apiKey'), model: $('model'),
+    settings: $('settings'), settingsForm: $('settingsForm'), apiKey: $('apiKey'), model: $('model'), voice: $('voice'),
     forgetKey: $('forgetKey'), openSettings: $('openSettings'), toast: $('toast'),
     fontUp: $('fontUp'), fontDown: $('fontDown'), toggleDyslexia: $('toggleDyslexia'), toggleContrast: $('toggleContrast'),
   };
@@ -56,7 +56,9 @@
     language: store.get('language', 'English'),
     mode: store.get('mode', 'local'),
     model: store.get('model', AI.DEFAULT_MODEL),
-    apiKey: store.get('apiKey', ''),
+    voice: store.get('voice', AI.DEFAULT_VOICE),
+    // A key saved in this browser wins; js/config.local.js (never committed) can supply one for local demos.
+    apiKey: store.get('apiKey', '') || (window.CLEARPASTE_LOCAL && window.CLEARPASTE_LOCAL.apiKey) || '',
   };
 
   function applyView() {
@@ -378,13 +380,80 @@
   const synth = window.speechSynthesis;
   let speaking = false;
 
+  // Picks the most natural device voice for the language, preferring male "Natural"/"Online" voices.
+  const MALE_HINT = /\b(male|prabhat|madhur|ravi|hemant|guy|davis|ryan|christopher|eric|brian|andrew|roger|steffan|thomas|george|daniel|james|liam|mark|david)\b/i;
   function pickVoice(code) {
     if (!synth) return null;
-    const voices = synth.getVoices();
     const base = code.split('-')[0];
-    return voices.find((v) => v.lang === code)
-      || voices.find((v) => v.lang && v.lang.toLowerCase().startsWith(base))
-      || null;
+    const voices = synth.getVoices().filter((v) => v.lang && v.lang.toLowerCase().startsWith(base));
+    const score = (v) => (v.lang === code ? 4 : 0)
+      + (/natural|neural|online/i.test(v.name) ? 6 : 0)
+      + (/google/i.test(v.name) ? 3 : 0)
+      + (MALE_HINT.test(v.name) ? 2 : 0)
+      - (/female|zira|heera|kalpana/i.test(v.name) ? 1 : 0);
+    return voices.sort((a, b) => score(b) - score(a))[0] || null;
+  }
+
+  // ----- Natural voice (Gemini) -----
+  let audio = null;
+  let audioAbort = null;
+  let naturalBroken = false;
+  const clipCache = new Map(); // text + voice -> Blob
+
+  function getClip(text, signal) {
+    const key = prefs.voice + '|' + text;
+    if (!clipCache.has(key)) {
+      const p = AI.speech(text, { apiKey: prefs.apiKey, voice: prefs.voice, signal });
+      p.catch(() => clipCache.delete(key));
+      clipCache.set(key, p);
+    }
+    return clipCache.get(key);
+  }
+
+  function markCard(id) {
+    clearSpeakingMarks();
+    const card = $(id);
+    if (card) {
+      card.classList.add('speaking');
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  async function speakNatural(chunks) {
+    audioAbort = new AbortController();
+    const { signal } = audioAbort;
+    setLabel(els.speakBtn, 'Loading voice…');
+    for (let i = 0; i < chunks.length; i++) {
+      if (!speaking) return;
+      const blob = await getClip(chunks[i].text, signal);
+      if (i + 1 < chunks.length) getClip(chunks[i + 1].text, signal); // fetch the next part while this one plays
+      if (!speaking) return;
+      const url = URL.createObjectURL(blob);
+      audio = new Audio(url);
+      audio.playbackRate = Math.min(1.4, Math.max(0.7, (parseFloat(els.rate.value) || 0.9) / 0.9));
+      if ('preservesPitch' in audio) audio.preservesPitch = true;
+      setLabel(els.speakBtn, 'Stop');
+      markCard(chunks[i].card);
+      await new Promise((resolve, reject) => {
+        audio.onended = resolve;
+        audio.onerror = () => reject(new Error('Could not play the audio.'));
+        audio.play().catch(reject);
+      }).finally(() => URL.revokeObjectURL(url));
+    }
+    stopSpeaking();
+  }
+
+  function speakDevice(chunks, code, voice) {
+    chunks.forEach((chunk, i) => {
+      const u = new SpeechSynthesisUtterance(chunk.text);
+      u.lang = code;
+      if (voice) u.voice = voice;
+      u.rate = parseFloat(els.rate.value) || 0.9;
+      u.onstart = () => markCard(chunk.card);
+      if (i === chunks.length - 1) u.onend = stopSpeaking;
+      u.onerror = (e) => { if (e.error !== 'interrupted' && e.error !== 'canceled') stopSpeaking(); };
+      synth.speak(u);
+    });
   }
 
   function speechChunks(result) {
@@ -408,6 +477,8 @@
 
   function stopSpeaking() {
     if (synth) synth.cancel();
+    if (audio) { audio.pause(); audio = null; }
+    if (audioAbort) { audioAbort.abort(); audioAbort = null; }
     speaking = false;
     clearSpeakingMarks();
     setLabel(els.speakBtn, 'Read aloud');
@@ -416,46 +487,50 @@
   }
 
   function speak() {
-    if (!synth) {
-      toast('Your browser does not support reading aloud.');
-      return;
-    }
     if (speaking) {
       stopSpeaking();
       return;
     }
     if (!lastResult) return;
-
-    const code = LANG_CODES[lastResult.language] || 'en-IN';
-    const voice = pickVoice(code);
-    if (!voice && lastResult.language !== 'English') {
-      toast(`No ${lastResult.language} voice on this device. Using the default voice.`);
-    }
-
     const chunks = speechChunks(lastResult);
     if (!chunks.length) return;
-    synth.cancel();
+
+    const code = LANG_CODES[lastResult.language] || 'en-IN';
+    const natural = prefs.apiKey && prefs.voice !== 'device' && !naturalBroken;
+    if (!natural && !synth) {
+      toast('Your browser does not support reading aloud.');
+      return;
+    }
+
+    if (synth) synth.cancel();
     speaking = true;
     setLabel(els.speakBtn, 'Stop');
     setIcon(els.speakBtn, 'i-stop');
     els.speakBtn.setAttribute('aria-pressed', 'true');
 
-    chunks.forEach((chunk, i) => {
-      const u = new SpeechSynthesisUtterance(chunk.text);
-      u.lang = code;
-      if (voice) u.voice = voice;
-      u.rate = parseFloat(els.rate.value) || 0.9;
-      u.onstart = () => {
-        clearSpeakingMarks();
-        const card = $(chunk.card);
-        if (card) {
-          card.classList.add('speaking');
-          card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-      };
-      if (i === chunks.length - 1) u.onend = stopSpeaking;
-      u.onerror = (e) => { if (e.error !== 'interrupted' && e.error !== 'canceled') stopSpeaking(); };
-      synth.speak(u);
+    const useDevice = (from) => {
+      const voice = pickVoice(code);
+      if (!voice && lastResult.language !== 'English') {
+        toast(`No ${lastResult.language} voice on this device. Using the default voice.`);
+      }
+      speakDevice(chunks.slice(from), code, voice);
+    };
+
+    if (!natural) {
+      useDevice(0);
+      return;
+    }
+    speakNatural(chunks).catch((err) => {
+      if (!speaking || err.name === 'AbortError') return;
+      // Key or billing problems will not fix themselves; skip the natural voice for the rest of this visit.
+      if ([400, 401, 402, 403, 404].includes(err.status)) naturalBroken = true;
+      toast(AI.friendlyError(err) + ' Using the device voice.');
+      if (synth) {
+        setLabel(els.speakBtn, 'Stop');
+        useDevice(0);
+      } else {
+        stopSpeaking();
+      }
     });
   }
 
@@ -522,6 +597,7 @@
   function openSettings() {
     els.apiKey.value = prefs.apiKey;
     els.model.value = prefs.model;
+    els.voice.value = prefs.voice;
     if (typeof els.settings.showModal === 'function') els.settings.showModal();
     else els.settings.setAttribute('open', '');
     els.apiKey.focus();
@@ -531,8 +607,11 @@
     if (e.submitter && e.submitter.value === 'cancel') return;
     prefs.apiKey = els.apiKey.value.trim();
     prefs.model = els.model.value.trim() || AI.DEFAULT_MODEL;
+    prefs.voice = els.voice.value || AI.DEFAULT_VOICE;
     store.set('apiKey', prefs.apiKey);
     store.set('model', prefs.model);
+    store.set('voice', prefs.voice);
+    clipCache.clear();
     if (prefs.apiKey) {
       document.querySelector('input[name="mode"][value="ai"]').checked = true;
       prefs.mode = 'ai';

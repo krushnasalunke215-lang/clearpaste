@@ -1,0 +1,2 @@
+# Local-only settings (API keys). Never commit this file.
+js/config.local.js

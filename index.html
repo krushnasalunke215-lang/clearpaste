@@ -277,6 +277,20 @@
       </label>
       <p class="hint">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. It is saved only in this browser and sent only to Google.</p>
       <label class="field">
+        <span>Read-aloud voice</span>
+        <select id="voice">
+          <option value="Charon">Charon: deep, calm male (recommended)</option>
+          <option value="Orus">Orus: firm male</option>
+          <option value="Algenib">Algenib: low, gravelly male</option>
+          <option value="Iapetus">Iapetus: clear male</option>
+          <option value="Gacrux">Gacrux: mature</option>
+          <option value="Kore">Kore: firm female</option>
+          <option value="Aoede">Aoede: light female</option>
+          <option value="device">Device voice (works offline, sounds robotic)</option>
+        </select>
+      </label>
+      <p class="hint">Natural voices use your Gemini key. Without a key, the device voice is used.</p>
+      <label class="field">
         <span>Model</span>
         <input type="text" id="model" spellcheck="false">
       </label>
@@ -293,6 +307,7 @@
     <p>Built for the Ctrl+V Hackathon · Runs in your browser · No account needed</p>
   </footer>
 
+  <script src="js/config.local.js" onerror="this.remove()"></script>
   <script src="js/engine.js"></script>
   <script src="js/ai.js"></script>
   <script src="js/samples.js"></script>
