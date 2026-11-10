@@ -150,15 +150,45 @@
     }
   }
 
+  function icon(id) {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', 'i');
+    svg.setAttribute('aria-hidden', 'true');
+    const use = document.createElementNS(ns, 'use');
+    use.setAttribute('href', '#' + id);
+    svg.append(use);
+    return svg;
+  }
+
+  // Contacts become tap-to-call / tap-to-email / open-link buttons.
   function contactNode(text) {
     const t = String(text).trim();
-    const digits = t.replace(/[^\d+]/g, '');
-    if (/@/.test(t) && /^\S+@\S+\.\S+$/.test(t)) return el('a', { href: 'mailto:' + t, text: t });
-    if (/^(https?:\/\/|www\.)\S+$/i.test(t)) return el('a', { href: /^https?:/i.test(t) ? t : 'https://' + t, target: '_blank', rel: 'noopener', text: t });
-    if (digits.replace('+', '').length >= 3 && /^[\d\s+()-]+(\s*\(emergency\))?$/.test(t)) {
-      return el('a', { href: 'tel:' + digits, text: t });
+    const label = t.match(/\s*\((emergency|helpline)\)$/i);
+    const value = label ? t.slice(0, label.index) : t;
+    const digits = value.replace(/[^\d+]/g, '');
+    const tagged = (a) => {
+      if (label) a.append(el('span', { class: 'contact-tag' + (/emergency/i.test(label[1]) ? ' urgent' : ''), text: label[1] }));
+      return a;
+    };
+    if (/^\S+@\S+\.\S+$/.test(value)) {
+      return el('a', { class: 'contact', href: 'mailto:' + value }, [icon('i-mail'), el('span', { text: value })]);
+    }
+    if (/^(https?:\/\/|www\.)\S+$/i.test(value)) {
+      return el('a', { class: 'contact', href: /^https?:/i.test(value) ? value : 'https://' + value, target: '_blank', rel: 'noopener' },
+        [icon('i-globe'), el('span', { text: value.replace(/^https?:\/\//i, '') })]);
+    }
+    if (digits.replace('+', '').length >= 3 && /^[\d\s+()-]+$/.test(value)) {
+      return tagged(el('a', { class: 'contact', href: 'tel:' + digits }, [icon('i-phone'), el('span', { text: value })]));
     }
     return document.createTextNode(t);
+  }
+
+  // "Tab. Metformin 500 mg twice a day after food" -> name + how to take it.
+  function medicineNode(text) {
+    const m = String(text).match(/^(.*?\d+(?:\.\d+)?\s?(?:mg|mcg|µg|ml|gm|g|iu|units?))\b\s*(.*)$/i);
+    if (!m || !m[2]) return el('div', null, [el('strong', { text: String(text) })]);
+    return el('div', null, [el('strong', { text: m[1] }), el('span', { text: m[2].charAt(0).toUpperCase() + m[2].slice(1) })]);
   }
 
   function renderReadability(r) {
@@ -250,7 +280,7 @@
       render: (m) => el('div', null, [el('strong', { text: m.amount }), el('span', { text: m.what || '' })]),
     });
     fillList(els.documents, result.documents, { checklist: true });
-    fillList(els.medicines, result.medicines);
+    fillList(els.medicines, result.medicines, { render: medicineNode });
     fillList(els.contacts, result.contacts, { render: contactNode });
     updateProgress();
 

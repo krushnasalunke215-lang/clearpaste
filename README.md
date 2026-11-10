@@ -44,7 +44,7 @@ Demo links that load an example straight away:
 | Needs internet or an account | No | Yes, a free Gemini API key |
 | Privacy | Text never leaves the device | Text is sent to Google's Gemini API |
 | Output language | English | 17 languages, including Hindi, Bengali, Tamil, Telugu, Marathi and Urdu |
-| How it works | Over 250 rules that replace legal, government, banking and medical phrases, split long sentences, and pick out dates, amounts, documents, medicines and contacts | Structured JSON output from Gemini using a strict schema and a prompt that forbids adding facts |
+| How it works | About 450 rules that replace legal, government, banking and medical phrases, address the reader as "you", spell out abbreviations and dosing codes (OD, BD, SOS, 1-0-1), split long sentences, turn duties into short to-dos, and pick out dates, amounts, documents, medicines and contacts | Structured JSON output from Gemini using a strict schema and a prompt that forbids adding facts |
 
 If an AI request fails, the app falls back to the offline result automatically.
 

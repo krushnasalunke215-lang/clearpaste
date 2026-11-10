@@ -412,7 +412,42 @@ html.contrast .progress { background: #3a3a3a; }
 .list li:last-child, .kv li:last-child { padding-bottom: 0; }
 .kv strong { display: block; font-size: 1rem; }
 .kv span { display: block; color: var(--muted); font-size: .88rem; line-height: 1.45; margin-top: 2px; }
-.contacts a { font-weight: 600; word-break: break-word; }
+/* Contacts as tap targets */
+.list.contacts { display: flex; flex-direction: column; gap: 8px; }
+.list.contacts li { border: 0; padding: 0; }
+.contact {
+  display: flex; align-items: center; gap: 10px; min-height: 44px;
+  padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); text-decoration: none; font-weight: 600;
+  word-break: break-word; transition: border-color .15s, background .15s;
+}
+.contact:hover { border-color: var(--teal); background: var(--teal-bg); }
+.contact .i { color: var(--teal); }
+.contact-tag {
+  margin-left: auto; flex: none; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 1px 8px; border-radius: 999px;
+}
+.contact-tag.urgent { color: #b42318; border-color: #f4b4ad; background: #fff1f0; }
+html.contrast .contact-tag.urgent { color: #ff9b9b; background: #000; border-color: #ff9b9b; }
+
+/* Dates, money and medicines */
+#dates strong {
+  display: inline-block; font-size: .95rem; color: var(--blue); background: var(--blue-bg);
+  padding: 2px 10px; border-radius: 8px; margin-bottom: 4px;
+}
+#money strong { color: var(--green); font-size: 1.12rem; }
+.meds strong { color: var(--text); }
+.meds span { color: var(--text); opacity: .8; }
+
+/* Warnings get a marker */
+.warn-card .list li { position: relative; padding-left: 18px; }
+.warn-card .list li::before {
+  content: ""; position: absolute; left: 2px; top: 1.05em; width: 7px; height: 7px; border-radius: 50%; background: var(--orange);
+}
+.warn-card .list li:first-child::before { top: .55em; }
+
+/* First line of the summary stands out */
+.summary p:first-child { font-weight: 600; font-size: 1.15rem; }
 
 .checklist li + li { margin-top: 6px; }
 .checklist label {
